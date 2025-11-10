@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build output
+js/
+*.tsbuildinfo
+
+# Environment variables (contains sensitive data)
+.env
+test-config.json
+
+# ServiceNow sync files
+*.service-now.com/
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

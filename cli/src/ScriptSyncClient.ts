@@ -16,6 +16,7 @@ export class ScriptSyncClient {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private lastSave: Map<string, number> = new Map();
+  private isReconnecting: boolean = false;
 
   constructor(host: string, port: number, workspace: string) {
     this.host = host;
@@ -36,15 +37,11 @@ export class ScriptSyncClient {
         }
       }, 5000);
 
-      if (!this.ws) {
-        reject(new Error('Failed to create WebSocket'));
-        return;
-      }
-
       this.ws.on('open', () => {
         clearTimeout(timeout);
         this.isConnected = true;
         this.reconnectAttempts = 0;
+        this.isReconnecting = false;
         console.log(chalk.gray(`Connected to WebSocket server at ${url}`));
         this.setupMessageHandler();
         this.startFileWatcher();
@@ -61,11 +58,15 @@ export class ScriptSyncClient {
         this.isConnected = false;
         console.log(chalk.yellow('Connection closed'));
         
-        // Attempt to reconnect
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Attempt to reconnect (with guard against concurrent attempts)
+        if (this.reconnectAttempts < this.maxReconnectAttempts && !this.isReconnecting) {
+          this.isReconnecting = true;
           this.reconnectAttempts++;
           console.log(chalk.gray(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`));
-          setTimeout(() => this.connect(), 2000);
+          setTimeout(() => {
+            this.isReconnecting = false;
+            this.connect();
+          }, 2000);
         }
       });
     });
@@ -100,7 +101,7 @@ export class ScriptSyncClient {
 
   private handleMessage(message: any): void {
     // Handle connection acknowledgment
-    if (Array.isArray(message) && message[0] === 'Connected to VS Code ScriptScync WebSocket') {
+    if (Array.isArray(message) && message[0] === 'Connected to VS Code ScriptSync WebSocket') {
       console.log(chalk.gray('Browser extension acknowledged connection'));
       return;
     }

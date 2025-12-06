@@ -1,5 +1,7 @@
-# VS Code ScriptSync for ServiceNow
-Easy Integration from ServiceNow to VS Code to be able to script in a full fledged editor, without any configuration.
+# ScriptSync for ServiceNow
+Easy Integration from ServiceNow to your editor to be able to script in a full fledged editor, without any configuration.
+
+**Now available for:** VS Code, Vim, Neovim, and any text editor via the CLI tool!
 
 # Important 3.0 update
 In August 2023 the 3.0 update is released.
@@ -24,13 +26,53 @@ Please let me know if you exoerience issues, preferable via a GitHub Issue.
 
 ## [YouTube quick 3.0 demo (August 2023)](https://www.youtube.com/watch?v=cpyasfe93kQ)
 
+# 🆕 CLI Tool for Any Editor (Vim, Emacs, etc.)
+
+A new **CLI tool** is now available that enables ServiceNow script synchronization with **any text editor**!
+
+## Quick Start with CLI
+
+```bash
+# Install
+cd cli
+npm install
+npm run build
+npm link
+
+# Connect and start syncing
+cd ~/Documents/sn-scriptsync
+sn-scriptsync connect
+
+# Now edit files with any editor (Vim, Emacs, Sublime, nano, etc.)
+vim instance/global/sys_script/MyBusinessRule.script.js
+# Changes automatically sync to ServiceNow!
+```
+
+## Features
+- ✅ Works with **any text editor** (Vim, Neovim, Emacs, Sublime, Atom, nano)
+- ✅ Receive code from browser extension (even when VSCode is not open)
+- ✅ Automatic file watching and synchronization
+- ✅ Pull scope artifacts from command line
+- ✅ Open files in ServiceNow instance from terminal
+- ✅ Refresh files from instance
+- ✅ Compatible with existing VSCode extension (can run simultaneously)
+
+## Documentation
+- **[CLI User Guide](cli/README.md)** - Complete CLI documentation
+- **[Vim Integration Guide](cli/VIM_INTEGRATION.md)** - Vim/Neovim integration patterns
+- **[Function Mapping](cli/FUNCTION_MAPPING.md)** - Technical details and browser extension function mapping
+
+**See the [cli](cli/) directory for complete documentation and setup instructions.**
+
 # SN Utils
 Requires the latest version of SN Utils, links via: 
 [arnoudkooi.com](https://arnoudkooi.com)  
 
 **In case of issues, always check for the latest version of both the browser and VS Code extension, and update if needed!**
 
-# Setup
+---
+
+# VS Code Extension Setup
 After installing both this extension and the browser extension, open a folder in VS Code and enable scriptsync in VS Code.
 
 ## Setting folder

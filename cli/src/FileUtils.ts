@@ -24,8 +24,13 @@ export class FileUtils {
 
   getFileAsJson(filePath: string): any {
     try {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    } catch {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      return JSON.parse(content);
+    } catch (error) {
+      // File doesn't exist or is not valid JSON
+      if (error instanceof Error && 'code' in error && (error as any).code !== 'ENOENT') {
+        console.error(`Warning: Failed to parse JSON file ${filePath}:`, error.message);
+      }
       return {};
     }
   }

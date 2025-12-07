@@ -1,0 +1,6 @@
+- Sync code edited here back on the instance. 
+  Either there is a command already , Or make one.
+- Make sure to understand most of the functions here , To be a better developer
+  IE Read all the code before the next step ( Could do the next in parallel tho )
+- Later on add lsp for servicenow for neovim. Publish it based on this
+extension. Again very simple and would make the development much easier.

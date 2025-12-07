@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { ScriptSyncClient } from './ScriptSyncClient';
+import { ScriptSyncServer } from './WebSocketServer';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -12,6 +13,41 @@ program
   .name('sn-scriptsync')
   .description('CLI tool for ServiceNow script synchronization via browser extension')
   .version('1.0.0');
+
+program
+  .command('serve')
+  .description('Start standalone WebSocket server (replaces VS Code extension)')
+  .option('-p, --port <port>', 'WebSocket port', '1978')
+  .option('-h, --host <host>', 'WebSocket host', '127.0.0.1')
+  .option('-w, --workspace <path>', 'Workspace path', process.cwd())
+  .action(async (options) => {
+    const server = new ScriptSyncServer(
+      parseInt(options.port),
+      options.host,
+      options.workspace
+    );
+
+    try {
+      await server.start();
+      console.log(chalk.blue('Server is running. Press Ctrl+C to stop.'));
+      console.log(chalk.gray('Open browser extension and run /token to connect'));
+
+      // Keep the process running
+      process.on('SIGINT', () => {
+        console.log(chalk.yellow('\nStopping server...'));
+        server.stop();
+        process.exit(0);
+      });
+
+      process.on('SIGTERM', () => {
+        server.stop();
+        process.exit(0);
+      });
+    } catch (error) {
+      console.error(chalk.red('✗ Failed to start server:'), error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
 
 program
   .command('connect')

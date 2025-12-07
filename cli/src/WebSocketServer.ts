@@ -297,6 +297,7 @@ export class ScriptSyncServer {
     }
 
     console.log(chalk.gray('Starting file watcher...'));
+    console.log(chalk.gray(`  Watching: ${this.workspace}`));
 
     // Watch all files in the workspace, excluding certain directories
     this.fileWatcher = chokidar.watch(this.workspace, {
@@ -319,10 +320,17 @@ export class ScriptSyncServer {
     });
 
     this.fileWatcher.on('change', (filePath) => {
+      console.log(chalk.cyan('→ File change detected:'), filePath);
       this.handleFileChange(filePath);
     });
 
-    console.log(chalk.gray('✓ File watcher started - edits will auto-sync to ServiceNow'));
+    this.fileWatcher.on('error', (error) => {
+      console.error(chalk.red('File watcher error:'), error);
+    });
+
+    this.fileWatcher.on('ready', () => {
+      console.log(chalk.gray('✓ File watcher started - edits will auto-sync to ServiceNow'));
+    });
   }
 
   private handleFileChange(filePath: string): void {
@@ -331,27 +339,42 @@ export class ScriptSyncServer {
     const lastSaveTime = this.lastSave.get(filePath) || 0;
     
     if (now - lastSaveTime < 1000) {
+      console.log(chalk.gray('  Debounced (too soon)'));
       return; // Debounce saves within 1 second
     }
     
     this.lastSave.set(filePath, now);
 
+    console.log(chalk.gray('  Parsing file path...'));
     const scriptObj = this.fileUtils.filePathToObject(filePath);
     
-    if (!scriptObj || scriptObj === true || !scriptObj.sys_id) {
+    if (!scriptObj || scriptObj === true) {
+      console.log(chalk.yellow('  ⚠ Not a recognized ServiceNow file (check path structure)'));
+      console.log(chalk.gray(`    Expected: workspace/instance/scope/table/name.field.ext`));
+      console.log(chalk.gray(`    Got: ${path.relative(this.workspace, filePath)}`));
       return; // Not a recognized file
     }
 
+    if (!scriptObj.sys_id) {
+      console.log(chalk.yellow('  ⚠ File not in _map.json (sys_id not found)'));
+      console.log(chalk.gray(`    Pull this file from ServiceNow first to establish mapping`));
+      return;
+    }
+
     if (scriptObj.fieldName === '_test_urls') {
+      console.log(chalk.gray('  Skipped: Test URL file'));
       return; // Helper file, don't save to instance
     }
 
     if (scriptObj.tableName === 'background') {
+      console.log(chalk.gray('  Skipped: Background script (run-only)'));
       return; // Background scripts don't sync to instance
     }
 
-    console.log(chalk.blue('→ File changed:'), path.relative(this.workspace, filePath));
-    console.log(chalk.gray(`  Syncing to ServiceNow: ${scriptObj.tableName}/${scriptObj.name}`));
+    console.log(chalk.blue('→ Syncing to ServiceNow'));
+    console.log(chalk.gray(`  Table: ${scriptObj.tableName}`));
+    console.log(chalk.gray(`  Name: ${scriptObj.name}`));
+    console.log(chalk.gray(`  Field: ${scriptObj.fieldName}`));
     this.sendToServiceNow(scriptObj);
   }
 

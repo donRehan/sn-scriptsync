@@ -77,7 +77,9 @@ export class FileUtils {
     const relativePath = path.relative(this.workspace, filePath);
     const parts = relativePath.split(path.sep);
 
-    if (parts.length < 5) {
+    // Minimum 4 parts for regular tables: instance/scope/table/file.field.ext
+    // 5 parts for folder tables: instance/scope/table/recordname/field.ext
+    if (parts.length < 4) {
       return true; // Not a valid synced file
     }
 

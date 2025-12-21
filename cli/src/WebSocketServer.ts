@@ -19,6 +19,7 @@ export class ScriptSyncServer {
   private isRunning: boolean = false;
   private fileWatcher: chokidar.FSWatcher | null = null;
   private lastSave: Map<string, number> = new Map();
+  private ignoredFiles: Set<string> = new Set(); // Files saved from ServiceNow, skip watching
 
   constructor(port: number = 1978, host: string = '127.0.0.1', workspace: string) {
     this.port = port;
@@ -213,6 +214,10 @@ export class ScriptSyncServer {
     fs.mkdirSync(path.dirname(fileName), { recursive: true });
     fs.writeFileSync(fileName, message.content || '');
 
+    // Mark this file as ignored to prevent file watcher from triggering
+    this.ignoredFiles.add(fileName);
+    setTimeout(() => this.ignoredFiles.delete(fileName), 2000); // Remove after 2 seconds
+
     console.log(chalk.green('✓ File saved:'), path.relative(this.workspace, fileName));
   }
 
@@ -334,6 +339,12 @@ export class ScriptSyncServer {
   }
 
   private handleFileChange(filePath: string): void {
+    // Skip if this file was just saved from ServiceNow (prevents loop)
+    if (this.ignoredFiles.has(filePath)) {
+      console.log(chalk.gray('  Skipped: File just received from ServiceNow'));
+      return;
+    }
+
     // Prevent rapid successive saves
     const now = Date.now();
     const lastSaveTime = this.lastSave.get(filePath) || 0;
